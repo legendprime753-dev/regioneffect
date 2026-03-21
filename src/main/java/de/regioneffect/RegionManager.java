@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +54,7 @@ public final class RegionManager {
                 RegionEffect effect = null;
                 String effectName = regionSection.getString("effect.type");
                 if (effectName != null && !effectName.isBlank()) {
-                    PotionEffectType type = PotionEffectResolver.resolve(effectName).orElse(null);
+                    PotionEffectType type = PotionEffectType.getByName(effectName.toUpperCase(Locale.ROOT));
                     if (type != null) {
                         effect = new RegionEffect(type, Math.max(0, regionSection.getInt("effect.amplifier", 0)));
                     } else {
@@ -99,7 +99,7 @@ public final class RegionManager {
             regionSection.set("max.z", region.getMaxZ());
             RegionEffect effect = region.getEffect();
             if (effect != null) {
-                regionSection.set("effect.type", PotionEffectResolver.toStorageKey(effect.type()));
+                regionSection.set("effect.type", effect.type().getName());
                 regionSection.set("effect.amplifier", effect.amplifier());
             }
         }
@@ -128,17 +128,6 @@ public final class RegionManager {
         rebuildWorldIndex(region.getWorldName());
         save();
         return Optional.of(region);
-    }
-
-    public synchronized boolean deleteRegion(String regionName) {
-        CuboidRegion removed = regionsByName.remove(normalize(regionName));
-        if (removed == null) {
-            return false;
-        }
-
-        rebuildWorldIndex(removed.getWorldName());
-        save();
-        return true;
     }
 
     public synchronized boolean setEffect(String regionName, RegionEffect effect) {

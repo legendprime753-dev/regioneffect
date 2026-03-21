@@ -1,6 +1,7 @@
 package de.regioneffect;
 
 import org.bukkit.Location;
+import org.bukkit.Registry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -27,14 +28,13 @@ public final class RegioneffectCommand implements CommandExecutor, TabCompleter 
         }
 
         if (args.length == 0) {
-            sender.sendMessage("§eVerwendung: /regioneffect <create|effect|delete|reload>");
+            sender.sendMessage("§eVerwendung: /regioneffect <create|effect|reload>");
             return true;
         }
 
         return switch (args[0].toLowerCase(Locale.ROOT)) {
             case "create" -> handleCreate(sender, args);
             case "effect" -> handleEffect(sender, args);
-            case "delete" -> handleDelete(sender, args);
             case "reload" -> handleReload(sender);
             default -> {
                 sender.sendMessage("§cUnbekannter Unterbefehl.");
@@ -82,7 +82,7 @@ public final class RegioneffectCommand implements CommandExecutor, TabCompleter 
             return true;
         }
 
-        PotionEffectType type = PotionEffectResolver.resolve(args[2]).orElse(null);
+        PotionEffectType type = PotionEffectType.getByName(args[2].toUpperCase(Locale.ROOT));
         if (type == null) {
             sender.sendMessage("§cUnbekannter Potion-Effekt: " + args[2]);
             return true;
@@ -107,25 +107,8 @@ public final class RegioneffectCommand implements CommandExecutor, TabCompleter 
             return true;
         }
 
-        sender.sendMessage("§aEffekt für Region '§f" + args[1] + "§a' gesetzt: §f" + PotionEffectResolver.toStorageKey(type) + " §7(Stärke " + amplifier + ")");
+        sender.sendMessage("§aEffekt für Region '§f" + args[1] + "§a' gesetzt: §f" + type.getName() + " §7(Stärke " + amplifier + ")");
         plugin.getEffectService().refreshAll(plugin.getServer().getOnlinePlayers());
-        return true;
-    }
-
-    private boolean handleDelete(CommandSender sender, String[] args) {
-        if (args.length < 2) {
-            sender.sendMessage("§eVerwendung: /regioneffect delete <Region>");
-            return true;
-        }
-
-        boolean success = plugin.getRegionManager().deleteRegion(args[1]);
-        if (!success) {
-            sender.sendMessage("§cDie Region '" + args[1] + "' wurde nicht gefunden.");
-            return true;
-        }
-
-        plugin.getEffectService().refreshAll(plugin.getServer().getOnlinePlayers());
-        sender.sendMessage("§aRegion '§f" + args[1] + "§a' wurde gelöscht.");
         return true;
     }
 
@@ -143,15 +126,19 @@ public final class RegioneffectCommand implements CommandExecutor, TabCompleter 
         }
 
         if (args.length == 1) {
-            return filter(List.of("create", "effect", "delete", "reload"), args[0]);
+            return filter(List.of("create", "effect", "reload"), args[0]);
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("effect") || args[0].equalsIgnoreCase("delete"))) {
+        if (args.length == 2 && args[0].equalsIgnoreCase("effect")) {
             return filter(plugin.getRegionManager().getAllRegions().stream()
                     .map(CuboidRegion::getName)
                     .toList(), args[1]);
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("effect")) {
-            return filter(new ArrayList<>(PotionEffectResolver.suggestions()), args[2]);
+            List<String> effectNames = new ArrayList<>();
+            for (PotionEffectType type : Registry.EFFECT) {
+                effectNames.add(type.getName());
+            }
+            return filter(effectNames, args[2]);
         }
         if (args.length == 4 && args[0].equalsIgnoreCase("effect")) {
             return List.of("0", "1", "2", "3");

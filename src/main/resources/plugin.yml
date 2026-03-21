@@ -7,7 +7,7 @@ authors:
 commands:
   regioneffect:
     description: Verwalte Regionen mit Potion-Effekten.
-    usage: /regioneffect <create|effect|delete|reload>
+    usage: /regioneffect <create|effect|reload>
     aliases: [re]
 permissions:
   regioneffect.admin:

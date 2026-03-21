@@ -31,7 +31,6 @@ public final class RegioneffectPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new SelectionListener(this), this);
         getServer().getPluginManager().registerEvents(new RegionEffectListener(this), this);
-        getServer().getScheduler().runTaskTimer(this, () -> effectService.refreshAll(getServer().getOnlinePlayers()), 40L, 40L);
         effectService.refreshAll(getServer().getOnlinePlayers());
     }
 
