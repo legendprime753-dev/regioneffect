@@ -82,7 +82,7 @@ public final class RegioneffectCommand implements CommandExecutor, TabCompleter 
             return true;
         }
 
-        PotionEffectType type = PotionEffectResolver.resolve(args[2]).orElse(null);
+        PotionEffectType type = PotionEffectType.getByName(args[2].toUpperCase(Locale.ROOT));
         if (type == null) {
             sender.sendMessage("§cUnbekannter Potion-Effekt: " + args[2]);
             return true;
@@ -136,7 +136,7 @@ public final class RegioneffectCommand implements CommandExecutor, TabCompleter 
         if (args.length == 3 && args[0].equalsIgnoreCase("effect")) {
             List<String> effectNames = new ArrayList<>();
             for (PotionEffectType type : Registry.EFFECT) {
-                effectNames.add(type.getKey().getKey());
+                effectNames.add(type.getName());
             }
             return filter(effectNames, args[2]);
         }

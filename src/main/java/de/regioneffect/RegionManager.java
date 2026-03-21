@@ -54,7 +54,7 @@ public final class RegionManager {
                 RegionEffect effect = null;
                 String effectName = regionSection.getString("effect.type");
                 if (effectName != null && !effectName.isBlank()) {
-                    PotionEffectType type = PotionEffectResolver.resolve(effectName).orElse(null);
+                    PotionEffectType type = PotionEffectType.getByName(effectName.toUpperCase(Locale.ROOT));
                     if (type != null) {
                         effect = new RegionEffect(type, Math.max(0, regionSection.getInt("effect.amplifier", 0)));
                     } else {
@@ -99,7 +99,7 @@ public final class RegionManager {
             regionSection.set("max.z", region.getMaxZ());
             RegionEffect effect = region.getEffect();
             if (effect != null) {
-                regionSection.set("effect.type", PotionEffectResolver.toStorageKey(effect.type()));
+                regionSection.set("effect.type", effect.type().getName());
                 regionSection.set("effect.amplifier", effect.amplifier());
             }
         }

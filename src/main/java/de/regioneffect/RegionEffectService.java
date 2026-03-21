@@ -12,8 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class RegionEffectService {
-    private static final int EFFECT_DURATION_TICKS = 220;
-    private static final int EFFECT_REFRESH_THRESHOLD_TICKS = 100;
+    private static final int EFFECT_DURATION_TICKS = 60;
 
     private final RegionManager regionManager;
     private final Map<UUID, Map<PotionEffectType, Integer>> activeEffectsByPlayer = new ConcurrentHashMap<>();
@@ -37,13 +36,8 @@ public final class RegionEffectService {
         Map<PotionEffectType, Integer> previous = activeEffectsByPlayer.getOrDefault(player.getUniqueId(), Map.of());
 
         for (Map.Entry<PotionEffectType, Integer> entry : next.entrySet()) {
-            PotionEffect activePotion = player.getPotionEffect(entry.getKey());
             Integer previousAmplifier = previous.get(entry.getKey());
-            if (previousAmplifier == null
-                    || previousAmplifier != entry.getValue()
-                    || activePotion == null
-                    || activePotion.getAmplifier() != entry.getValue()
-                    || activePotion.getDuration() <= EFFECT_REFRESH_THRESHOLD_TICKS) {
+            if (previousAmplifier == null || previousAmplifier != entry.getValue()) {
                 apply(player, entry.getKey(), entry.getValue());
             }
         }
