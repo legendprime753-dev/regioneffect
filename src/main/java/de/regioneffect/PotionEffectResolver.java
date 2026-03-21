@@ -4,13 +4,47 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeSet;
 
 public final class PotionEffectResolver {
-    private static final Map<String, String> ALIASES = createAliases();
+    private static final Map<String, String> ALIASES = Map.ofEntries(
+            Map.entry("strength", "increase_damage"),
+            Map.entry("stärke", "increase_damage"),
+            Map.entry("haste", "fast_digging"),
+            Map.entry("eile", "fast_digging"),
+            Map.entry("mining_fatigue", "slow_digging"),
+            Map.entry("abbauverlangsamung", "slow_digging"),
+            Map.entry("jump_boost", "jump"),
+            Map.entry("sprungkraft", "jump"),
+            Map.entry("instant_health", "heal"),
+            Map.entry("heilung", "heal"),
+            Map.entry("instant_damage", "harm"),
+            Map.entry("schaden", "harm"),
+            Map.entry("resistance", "damage_resistance"),
+            Map.entry("resistenz", "damage_resistance"),
+            Map.entry("night_vision", "night_vision"),
+            Map.entry("nachtsicht", "night_vision"),
+            Map.entry("water_breathing", "water_breathing"),
+            Map.entry("wasseratmung", "water_breathing"),
+            Map.entry("fire_resistance", "fire_resistance"),
+            Map.entry("feuerresistenz", "fire_resistance"),
+            Map.entry("weakness", "weakness"),
+            Map.entry("schwäche", "weakness"),
+            Map.entry("slowness", "slow"),
+            Map.entry("langsamkeit", "slow"),
+            Map.entry("speed", "speed"),
+            Map.entry("schnelligkeit", "speed"),
+            Map.entry("luck", "luck"),
+            Map.entry("glück", "luck"),
+            Map.entry("unluck", "unluck"),
+            Map.entry("pech", "unluck"),
+            Map.entry("saturation", "saturation"),
+            Map.entry("sättigung", "saturation")
+    );
 
     private PotionEffectResolver() {
     }
@@ -21,30 +55,58 @@ public final class PotionEffectResolver {
         }
 
         String normalized = normalize(input);
-        String candidate = ALIASES.getOrDefault(normalized, normalized);
+        String aliasCandidate = ALIASES.get(normalized);
+        if (aliasCandidate != null) {
+            PotionEffectType aliased = findByKeyOrLegacyName(aliasCandidate);
+            if (aliased != null) {
+                return Optional.of(aliased);
+            }
+        }
 
-        PotionEffectType byKey = Registry.EFFECT.get(NamespacedKey.minecraft(candidate));
-        if (byKey != null) {
-            return Optional.of(byKey);
+        PotionEffectType direct = findByKeyOrLegacyName(normalized);
+        return Optional.ofNullable(direct);
+    }
+
+    public static String toStorageKey(PotionEffectType type) {
+        String key = type.getKey().getKey();
+        for (Map.Entry<String, String> entry : ALIASES.entrySet()) {
+            if (entry.getValue().equals(key) && !entry.getKey().contains("ä") && !entry.getKey().contains("ü") && !entry.getKey().contains("ö")) {
+                return entry.getKey();
+            }
+        }
+        return key;
+    }
+
+    public static Collection<String> suggestions() {
+        TreeSet<String> suggestions = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (PotionEffectType type : Registry.EFFECT) {
+            suggestions.add(type.getKey().getKey());
+            String legacyName = type.getName();
+            if (legacyName != null) {
+                suggestions.add(legacyName.toLowerCase(Locale.ROOT));
+            }
+        }
+        suggestions.addAll(ALIASES.keySet());
+        return suggestions;
+    }
+
+    private static PotionEffectType findByKeyOrLegacyName(String candidate) {
+        PotionEffectType byMinecraftKey = Registry.EFFECT.get(NamespacedKey.minecraft(candidate));
+        if (byMinecraftKey != null) {
+            return byMinecraftKey;
         }
 
         for (PotionEffectType type : Registry.EFFECT) {
-            String key = type.getKey().getKey();
-            if (key.equalsIgnoreCase(candidate) || normalize(key).equals(candidate)) {
-                return Optional.of(type);
+            if (type.getKey().getKey().equalsIgnoreCase(candidate)) {
+                return type;
             }
 
             String legacyName = type.getName();
             if (legacyName != null && normalize(legacyName).equals(candidate)) {
-                return Optional.of(type);
+                return type;
             }
         }
-
-        return Optional.empty();
-    }
-
-    public static String toStorageKey(PotionEffectType type) {
-        return type.getKey().getKey();
+        return null;
     }
 
     private static String normalize(String input) {
@@ -53,37 +115,5 @@ public final class PotionEffectResolver {
                 .replace(' ', '_')
                 .replace('-', '_')
                 .replace(':', '_');
-    }
-
-    private static Map<String, String> createAliases() {
-        Map<String, String> aliases = new HashMap<>();
-        aliases.put("strength", "strength");
-        aliases.put("stärke", "strength");
-        aliases.put("speed", "speed");
-        aliases.put("schnelligkeit", "speed");
-        aliases.put("slowness", "slowness");
-        aliases.put("langsamkeit", "slowness");
-        aliases.put("haste", "haste");
-        aliases.put("eile", "haste");
-        aliases.put("mining_fatigue", "mining_fatigue");
-        aliases.put("abbauverlangsamung", "mining_fatigue");
-        aliases.put("jump_boost", "jump_boost");
-        aliases.put("sprungkraft", "jump_boost");
-        aliases.put("resistance", "resistance");
-        aliases.put("resistenz", "resistance");
-        aliases.put("instant_health", "instant_health");
-        aliases.put("heal", "instant_health");
-        aliases.put("heilung", "instant_health");
-        aliases.put("instant_damage", "instant_damage");
-        aliases.put("harm", "instant_damage");
-        aliases.put("schaden", "instant_damage");
-        aliases.put("regeneration", "regeneration");
-        aliases.put("sättigung", "saturation");
-        aliases.put("saturation", "saturation");
-        aliases.put("luck", "luck");
-        aliases.put("glück", "luck");
-        aliases.put("unluck", "unluck");
-        aliases.put("pech", "unluck");
-        return Map.copyOf(aliases);
     }
 }
