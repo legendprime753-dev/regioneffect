@@ -1,0 +1,15 @@
+name: Regioneffect
+version: 1.0.0
+main: de.regioneffect.RegioneffectPlugin
+api-version: '1.21'
+authors:
+  - PrIyme
+commands:
+  regioneffect:
+    description: Verwalte Regionen mit Potion-Effekten.
+    usage: /regioneffect <create|effect|delete|reload>
+    aliases: [re]
+permissions:
+  regioneffect.admin:
+    description: Erlaubt Verwaltung von Regionen und Auswahl mit der Mace.
+    default: op
